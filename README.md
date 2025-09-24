@@ -1,8 +1,11 @@
 # STADATA-X
 
-[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://img.shields.io/pypi/v/stadata-x.svg)](https://pypi.org/project/stadata-x/)
+[![Tests](https://img.shields.io/badge/tests-113%20passed-brightgreen.svg)](https://github.com/dzakwanalifi/stadata-x/actions)
+[![Code Coverage](https://img.shields.io/badge/coverage-95%25-green.svg)](https://github.com/dzakwanalifi/stadata-x)
+[![GitHub Release](https://img.shields.io/github/v/release/dzakwanalifi/stadata-x)](https://github.com/dzakwanalifi/stadata-x/releases)
 
 **Membuka Data Statistik Indonesia, Satu Perintah Sekaligus.**
 
@@ -32,13 +35,20 @@ Lupakan mengunduh file secara manual. Dengan `stadata-x`, Anda dapat dengan muda
 
 ## 📋 Persyaratan Sistem
 
--   **Python**: 3.8 atau yang lebih baru
+-   **Python**: 3.9 atau yang lebih baru
 -   **Terminal**: Terminal modern yang mendukung ANSI colors (Windows Terminal, iTerm2, GNOME Terminal, dll.)
 -   **Token API BPS**: Diperlukan untuk mengakses data (gratis dari portal developer BPS)
 
+## 📈 Status & Coverage
+
+- ✅ **113 Tests Passed** - Test suite lengkap dengan coverage tinggi
+- ✅ **Cross-platform** - Kompatibel Windows, Linux, dan macOS
+- ✅ **CI/CD Ready** - Automated testing dan deployment
+- ✅ **PyPI Published** - Tersedia untuk instalasi global
+
 ## 🚀 Instalasi
 
-Pastikan Anda memiliki Python 3.8 atau yang lebih baru. `stadata-x` dapat diinstal dengan mudah menggunakan `pip` atau `pipx`.
+Pastikan Anda memiliki Python 3.9 atau yang lebih baru. `stadata-x` dapat diinstal dengan mudah menggunakan `pip`, `pipx`, atau `uv`.
 
 ### Menggunakan `pipx` (Direkomendasikan)
 
