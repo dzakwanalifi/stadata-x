@@ -1,0 +1,37 @@
+[run]
+source = stadata_x
+omit =
+    */tests/*
+    */test_*.py
+    */conftest.py
+    stadata_x/assets/*
+    setup.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+    if self\.debug:
+    if settings\.DEBUG
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\(ABC\):
+    .*# type: ignore
+    if TYPE_CHECKING:
+
+show_missing = True
+skip_covered = False
+skip_empty = False
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml
