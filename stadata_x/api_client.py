@@ -151,9 +151,21 @@ class ApiClient:
                 self.client.view_statictable, domain=domain_id, table_id=table_id
             )
 
+            # Debug logging untuk memahami tipe data yang dikembalikan
+            print(f"DEBUG: API result type: {type(result)}")
+            if hasattr(result, 'shape'):
+                print(f"DEBUG: DataFrame shape: {result.shape}")
+            elif isinstance(result, str):
+                print(f"DEBUG: String result (first 200 chars): {result[:200]}")
+            else:
+                print(f"DEBUG: Other result type: {str(result)[:200]}")
+
             if not isinstance(result, pd.DataFrame):
-                error_message = f"API BPS mengembalikan data tak terduga: {str(result)}"
+                error_message = f"API BPS mengembalikan data tak terduga (tipe: {type(result).__name__}): {str(result)[:500]}"
                 raise BpsApiDataError(error_message)
+
+            if result.empty:
+                raise BpsApiDataError("Tabel BPS kosong atau tidak tersedia")
 
             return result
         except ConnectionError:
@@ -164,9 +176,21 @@ class ApiClient:
             elif e.response.status_code >= 500:
                 raise BpsServerError("Server BPS sedang mengalami masalah.")
             else:
-                raise 
+                raise
         except Timeout:
             raise NoInternetError("Koneksi ke server BPS timeout.")
+        except TypeError as e:
+            if "string indices must be integers" in str(e):
+                # Error ini terjadi ketika kode mencoba mengakses string seperti dictionary
+                error_message = f"Response dari API BPS tidak valid untuk tabel {table_id}. Kemungkinan tabel tidak tersedia atau format data berubah."
+                print(f"DEBUG: TypeError caught: {str(e)}")
+                raise BpsApiDataError(error_message)
+            else:
+                raise BpsApiError(f"Error tipe data: {str(e)}")
+        except KeyError as e:
+            # Error ketika mencoba mengakses key yang tidak ada
+            error_message = f"Format response dari API BPS tidak sesuai untuk tabel {table_id}: missing key {str(e)}"
+            raise BpsApiDataError(error_message)
 
     async def download_table(
         self,
