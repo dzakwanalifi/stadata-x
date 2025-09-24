@@ -1,0 +1,180 @@
+/* stadata_x/assets/app.css */
+
+Screen {
+    background: $surface;
+    color: $text;
+}
+
+WelcomeScreen {
+    align: center middle;
+}
+
+#logo {
+    text-align: center;
+    width: auto;
+}
+
+#slogan {
+    text-style: italic;
+    color: $text-muted; 
+}
+
+#prompt {
+    color: $text-disabled; 
+}
+
+
+StadataDataTable {
+    margin: 1 2;
+    border: round dodgerblue;
+    height: 12;
+}
+
+StadataDataTable .datatable--header {
+    background: $primary;
+    color: $text;
+    text-style: bold;
+}
+
+PlotWidget {
+    margin: 1 2;
+    border: round magenta;
+    padding: 1;
+}
+
+#settings-container {
+    width: 60;
+    height: auto;
+    padding: 2;
+    border: round green;
+}
+
+#settings-container .label {
+    margin-bottom: 1;
+}
+
+#settings-container .status {
+    margin-top: 1;
+    text-align: center;
+}
+
+#settings-container .buttons {
+    height: 3;
+    margin-top: 1;
+}
+
+#settings-container .buttons Button {
+    color: $text;
+    background: $primary;
+    border: solid $primary-lighten-1;
+    min-width: 15;
+    height: 3;
+}
+
+#settings-container .buttons Button:hover {
+    background: $primary-darken-1;
+}
+
+#content-area {
+    height: 1fr;
+}
+
+#loader {
+    display: none;
+    text-align: center;
+    margin: 2 0;
+}
+
+.breadcrumbs {
+    background: $boost;
+    color: $text;
+    padding: 0 1;
+    height: 1;
+    dock: top;
+    width: 100%;
+    content-align: left middle;
+}
+
+#settings-container {
+    width: 80%;
+    max-width: 80;
+    height: auto;
+    border: round $primary;
+    padding: 1 2;
+    background: $surface;
+}
+
+.instructions {
+    margin-top: 1;
+    padding: 1;
+    border: round $primary-lighten-2;
+    height: auto;
+    color: $text-muted; 
+}
+
+.instructions:hover {
+    color: $text;
+}
+
+.label-top-margin {
+    margin-top: 1;
+}
+
+DownloadDialogScreen {
+    align: center middle;
+}
+
+#download-dialog {
+    grid-size: 2;
+    grid-gutter: 1;
+    grid-rows: auto auto 3;
+    padding: 0 1;
+    width: 60;
+    height: 14;
+    border: thick $primary 80%;
+    background: $surface;
+}
+
+#download-dialog > Label {
+    padding-top: 1;
+    height: 100%;
+    content-align: right middle;
+}
+
+#download-dialog > Input {
+    width: 100%;
+}
+
+#download-dialog > #cancel-button {
+    width: 100%;
+}
+
+#download-dialog > #download-button {
+    width: 100%;
+}
+
+.dialog-label {
+    padding-top: 1;
+}
+
+StadataDataTable {
+    height: 1fr;
+    margin-top: 1;
+}
+
+StadataDataTable > .datatable--body {
+    background: $surface;
+}
+
+StadataDataTable > .datatable--body > .datatable--row:even {
+    background: $surface-darken-1;
+}
+
+StadataDataTable > .datatable--body > .datatable--row:hover {
+    background: $accent;
+}
+
+StadataDataTable > .datatable--header {
+    background: $primary-darken-2;
+    text-style: bold;
+}
