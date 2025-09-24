@@ -6,14 +6,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stadata-x"
-version = "0.1.6"
+version = "0.1.7"
 authors = [
   { name="Dzakwan Alifi", email="dzakwan624@gmail.com" },
 ]
 description = "Terminal UI untuk menjelajahi dan mengunduh data BPS Indonesia secara interaktif"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.14"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
@@ -21,6 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
     "Environment :: Console",
     "Intended Audience :: Developers",
