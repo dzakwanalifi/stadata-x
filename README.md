@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyPI version](https://badge.fury.io/py/stadata-x.svg)](https://badge.fury.io/py/stadata-x)
+[![PyPI version](https://img.shields.io/pypi/v/stadata-x.svg)](https://pypi.org/project/stadata-x/)
 
 **Membuka Data Statistik Indonesia, Satu Perintah Sekaligus.**
 
@@ -52,6 +52,12 @@ pipx install stadata-x
 
 ```bash
 pip install stadata-x
+```
+
+### Menggunakan `uv`
+
+```bash
+uv pip install stadata-x
 ```
 
 ### Verifikasi Instalasi
