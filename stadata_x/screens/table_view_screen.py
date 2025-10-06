@@ -114,7 +114,9 @@ class TableViewScreen(Screen):
             loader.display = False
             error_msg = str(e)
             # Provide more user-friendly error messages
-            if "Tidak ada koneksi" in error_msg or "connection" in error_msg.lower():
+            if "SSL certificate" in error_msg or "certificate verify failed" in error_msg:
+                user_msg = "SSL certificate verification failed. Coba update certificates atau gunakan VPN."
+            elif "Tidak ada koneksi" in error_msg or "connection" in error_msg.lower():
                 user_msg = "Tidak ada koneksi internet"
             elif "string indices must be integers" in error_msg:
                 user_msg = "Format data tabel tidak sesuai (kemungkinan tabel kosong atau error API)"

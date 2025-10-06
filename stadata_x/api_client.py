@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 from stadata_x import config
 from pandas import DataFrame
-from requests.exceptions import ConnectionError, HTTPError, Timeout
+from requests.exceptions import ConnectionError, HTTPError, Timeout, SSLError
 import time
 import json
 from datetime import datetime, timedelta
@@ -37,6 +37,8 @@ def handle_api_errors(func: Callable) -> Callable:
             raise ApiTokenError("Token API tidak diatur.")
         try:
             return await func(self, *args, **kwargs)
+        except SSLError as e:
+            raise NoInternetError("SSL certificate verification failed. Coba update certificates atau gunakan VPN.")
         except ConnectionError:
             raise NoInternetError("Tidak ada koneksi internet.")
         except HTTPError as e:
