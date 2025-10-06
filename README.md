@@ -3,8 +3,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://img.shields.io/pypi/v/stadata-x.svg)](https://pypi.org/project/stadata-x/)
-[![Tests](https://img.shields.io/badge/tests-113%20passed-brightgreen.svg)](https://github.com/dzakwanalifi/stadata-x/actions)
-[![Code Coverage](https://img.shields.io/badge/coverage-95%25-green.svg)](https://github.com/dzakwanalifi/stadata-x)
+[![Tests](https://github.com/dzakwanalifi/stadata-x/actions/workflows/ci.yml/badge.svg)](https://github.com/dzakwanalifi/stadata-x/actions)
+[![Code Coverage](https://codecov.io/gh/dzakwanalifi/stadata-x/branch/main/graph/badge.svg)](https://codecov.io/gh/dzakwanalifi/stadata-x)
 [![GitHub Release](https://img.shields.io/github/v/release/dzakwanalifi/stadata-x)](https://github.com/dzakwanalifi/stadata-x/releases)
 
 **Membuka Data Statistik Indonesia, Satu Perintah Sekaligus.**
@@ -42,9 +42,9 @@ Lupakan mengunduh file secara manual. Dengan `stadata-x`, Anda dapat dengan muda
 ## 📈 Status & Coverage
 
 - ✅ **113 Tests Passed** - Test suite lengkap dengan coverage tinggi
-- ✅ **Cross-platform** - Kompatibel Windows, Linux, dan macOS
-- ✅ **CI/CD Ready** - Automated testing dan deployment
-- ✅ **PyPI Published** - Tersedia untuk instalasi global
+- ✅ **Cross-platform** - Kompatibel Windows, Linux, dan macOS (Python 3.9-3.13)
+- ✅ **CI/CD Active** - GitHub Actions dengan testing multi-platform
+- ✅ **PyPI Published** - Tersedia untuk instalasi global via `pip install stadata-x`
 
 ## 🚀 Instalasi
 
