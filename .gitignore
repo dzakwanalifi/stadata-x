@@ -155,3 +155,7 @@ logs/
 
 # uv
 .venv/
+
+# Deployment documentation (contains sensitive tokens)
+DEPLOYMENT.md
+PYPI_DEPLOYMENT.md
