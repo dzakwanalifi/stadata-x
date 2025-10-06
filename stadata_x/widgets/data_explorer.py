@@ -116,8 +116,9 @@ class DataExplorer(Widget):
 
             self.current_view = "domain"
             self.selected_domain = None
-            self.table_type = "static" 
-            self.query_one(RadioSet).pressed_index = 0
+            self.table_type = "static"
+            # Skip RadioSet initialization since it's hidden
+            # self.query_one(RadioSet).pressed_index = 0
         except Exception as e:
             self.post_message(DataExplorerMessage("update_prompt", {
                 "breadcrumbs": "[bold red]Error[/]",

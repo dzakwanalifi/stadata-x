@@ -112,7 +112,18 @@ class TableViewScreen(Screen):
 
         except Exception as e:
             loader.display = False
-            self.app.notify(f"Gagal memuat pratinjau: {e}", severity="error", title="Error")
+            error_msg = str(e)
+            # Provide more user-friendly error messages
+            if "Tidak ada koneksi" in error_msg or "connection" in error_msg.lower():
+                user_msg = "Tidak ada koneksi internet"
+            elif "string indices must be integers" in error_msg:
+                user_msg = "Format data tabel tidak sesuai (kemungkinan tabel kosong atau error API)"
+            elif "empty" in error_msg.lower():
+                user_msg = "Tabel kosong atau tidak tersedia"
+            else:
+                user_msg = f"Error: {error_msg[:100]}..."
+
+            self.app.notify(f"Gagal memuat pratinjau: {user_msg}", severity="error", title="Error")
             self.app.pop_screen()
 
     async def action_download_table(self) -> None:

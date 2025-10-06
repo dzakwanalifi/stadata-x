@@ -157,15 +157,34 @@ class ApiClient:
             self.client.view_statictable, domain=domain_id, table_id=table_id
         )
 
-        print(f"DEBUG: API result type: {type(result)}")
-        if hasattr(result, 'shape'):
-            print(f"DEBUG: DataFrame shape: {result.shape}")
-        elif isinstance(result, str):
-            print(f"DEBUG: String result (first 200 chars): {result[:200]}")
-        else:
-            print(f"DEBUG: Other result type: {str(result)[:200]}")
+        # Debug logging removed for production
 
-        if not isinstance(result, pd.DataFrame):
+        # Handle various response types from stadata library
+        if isinstance(result, pd.DataFrame):
+            pass  # Already correct type
+        elif isinstance(result, dict):
+            # Try to convert dict to DataFrame
+            try:
+                result = pd.DataFrame(result)
+            except Exception as conv_error:
+                error_message = f"API BPS mengembalikan dict yang tidak dapat dikonversi ke DataFrame: {str(result)[:300]}"
+                raise BpsApiDataError(error_message) from conv_error
+        elif isinstance(result, (list, tuple)):
+            # Try to convert list to DataFrame
+            try:
+                result = pd.DataFrame(result)
+            except Exception as conv_error:
+                error_message = f"API BPS mengembalikan list yang tidak dapat dikonversi ke DataFrame: {str(result)[:300]}"
+                raise BpsApiDataError(error_message) from conv_error
+        elif isinstance(result, str):
+            # API returned error message as string
+            if "tidak ada koneksi" in result.lower() or "connection" in result.lower():
+                raise NoInternetError("Tidak ada koneksi internet")
+            else:
+                error_message = f"API BPS mengembalikan error message: {result[:500]}"
+                raise BpsApiDataError(error_message)
+        else:
+            # Unknown response type
             error_message = f"API BPS mengembalikan data tak terduga (tipe: {type(result).__name__}): {str(result)[:500]}"
             raise BpsApiDataError(error_message)
 
