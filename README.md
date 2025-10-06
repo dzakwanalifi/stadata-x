@@ -78,6 +78,170 @@ Setelah instalasi, verifikasi bahwa aplikasi terinstal dengan benar:
 stadata-x --version
 ```
 
+## 🔧 Troubleshooting
+
+### Masalah Instalasi Umum
+
+#### **1. Build Error dengan `lxml`**
+**Error**: `fatal error C1083: Cannot open include file: 'libxml/xmlversion.h'`
+
+**Solusi**:
+```bash
+# Gunakan wheel-only installation
+pip install stadata-x --only-binary=all
+
+# Atau gunakan uv
+uv pip install stadata-x --only-binary=all
+```
+
+**Penjelasan**: `stadata-x` menggunakan `lxml>=6.0.0` yang sudah include libxml2 binaries.
+
+#### **2. Python Version Compatibility**
+**Error**: `TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'`
+
+**Solusi**:
+- Pastikan menggunakan Python 3.9 atau yang lebih baru
+- `stadata-x` mendukung Python 3.9-3.13
+
+#### **3. Permission Error (Windows)**
+**Error**: `PermissionError: [Errno 13] Permission denied`
+
+**Solusi**:
+```bash
+# Jalankan sebagai administrator atau gunakan virtual environment
+python -m venv venv
+venv\Scripts\activate
+pip install stadata-x
+```
+
+#### **4. SSL/Connection Error**
+**Error**: `ssl.SSLCertVerificationError` atau connection timeout
+
+**Solusi**:
+```bash
+# Update pip dan certificates
+pip install --upgrade pip certifi
+
+# Atau gunakan HTTP instead HTTPS
+pip install stadata-x --trusted-host pypi.org --trusted-host files.pythonhosted.org
+```
+
+#### **5. Dependency Conflict**
+**Error**: `ERROR: Cannot install stadata-x because these package versions have conflicting dependencies`
+
+**Solusi**:
+```bash
+# Gunakan virtual environment terisolasi
+python -m venv isolated_env
+isolated_env\Scripts\activate
+pip install stadata-x
+
+# Atau gunakan pip-tools untuk resolve dependencies
+pip install pip-tools
+pip-compile --output-file=requirements.txt pyproject.toml
+pip-sync
+```
+
+### Alternative Installation Methods
+
+#### **Menggunakan Conda (Windows Recommended)**
+```bash
+# Install Miniconda atau Anaconda
+# Buat environment baru
+conda create -n stadata-env python=3.11
+conda activate stadata-env
+
+# Install package
+pip install stadata-x
+```
+
+#### **Menggunakan pipx (Isolated Environment)**
+```bash
+pipx install stadata-x
+```
+
+#### **Manual Installation dari Source**
+```bash
+# Clone repository
+git clone https://github.com/dzakwanalifi/stadata-x.git
+cd stadata-x
+
+# Install dengan uv
+uv sync --dev
+uv run stadata-x --version
+```
+
+### Debug dan Logging
+
+#### **Enable Verbose Output**
+```bash
+# Untuk pip
+pip install stadata-x -v
+
+# Untuk uv
+uv pip install stadata-x --verbose
+```
+
+#### **Check System Information**
+```bash
+# Python version
+python --version
+
+# pip version
+pip --version
+
+# OS information
+python -c "import platform; print(platform.platform())"
+
+# Check installed packages
+pip list | grep -E "(stadata|lxml|textual)"
+```
+
+### Masalah Runtime
+
+#### **API Token Error**
+```
+ApiTokenError: Token API tidak diatur
+```
+
+**Solusi**:
+1. Jalankan `stadata-x`
+2. Tekan `s` untuk Settings
+3. Masukkan Token API BPS Anda
+4. Test koneksi dengan tombol "Tes Koneksi"
+
+#### **Network/Connection Error**
+```
+NoInternetError: Tidak ada koneksi internet
+```
+
+**Solusi**:
+- Check koneksi internet
+- Coba lagi dalam beberapa saat (rate limiting)
+- Gunakan VPN jika diperlukan
+
+#### **Cache Issues**
+```bash
+# Clear cache
+# Windows
+rmdir /s %USERPROFILE%\.stadata-x
+
+# Linux/Mac
+rm -rf ~/.stadata-x
+```
+
+### Getting Help
+
+Jika masalah berlanjut:
+
+1. **Check GitHub Issues**: https://github.com/dzakwanalifi/stadata-x/issues
+2. **Create New Issue**: Sertakan:
+   - Python version (`python --version`)
+   - OS information
+   - Full error traceback
+   - Installation method used
+3. **Contact**: dzakwan624@gmail.com
+
 ## ⚡ Quick Start
 
 1. **Konfigurasi Token API BPS**:
