@@ -45,8 +45,16 @@ stadata-x = "stadata_x.main:run"
 
 [project.optional-dependencies]
 dev = [
-    "textual-dev",   
-    "ruff",           
+    "textual-dev",
+    "ruff",
+    # Testing
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    # Development tools
+    "requests>=2.31.0",
+    "build>=0.10.0",
+    "twine>=4.0.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -97,6 +105,10 @@ extend-exclude = ["**/app.css"]
 [dependency-groups]
 dev = [
     "textual-dev>=1.7.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "ruff>=0.1.0",
 ]
 
 [project.urls]
