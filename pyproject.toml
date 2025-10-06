@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stadata-x"
-version = "0.1.8"
+version = "0.1.9"
 authors = [
   { name="Dzakwan Alifi", email="dzakwan624@gmail.com" },
 ]
