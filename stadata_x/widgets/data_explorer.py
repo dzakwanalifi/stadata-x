@@ -4,7 +4,7 @@ import asyncio
 import time 
 from textual.widget import Widget
 from textual.app import ComposeResult
-from textual.widgets import Static
+from textual.widgets import Static, RadioSet, RadioButton
 from textual.containers import Vertical
 from textual import on
 from textual.events import Message
@@ -29,6 +29,14 @@ class TableSelected(Message):
         super().__init__()
 
 
+class DynamicTableSelected(Message):
+    """Pesan yang dikirim saat sebuah tabel dinamis dipilih di DataExplorer."""
+    def __init__(self, var_id: str, title: str):
+        self.var_id = var_id
+        self.title = title
+        super().__init__()
+
+
 class DataExplorer(Widget):
     """Widget komposit untuk menampilkan dan menavigasi data BPS."""
 
@@ -36,8 +44,9 @@ class DataExplorer(Widget):
         super().__init__(*args, **kwargs)
         self.current_view = "domain"
         self.selected_domain = None
-        self.is_loading = False 
-        self._selection_lock = asyncio.Lock() 
+        self.is_loading = False
+        self._selection_lock = asyncio.Lock()
+        self.table_type = "static" 
 
     async def _fetch_with_min_delay(self, awaitable_task, min_delay=0.3):
         """
@@ -53,8 +62,19 @@ class DataExplorer(Widget):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="content-area"):
+            with RadioSet(id="table-type-selector", disabled=True):
+                yield RadioButton("Tabel Statis", value=True, id="static")
+                yield RadioButton("Tabel Dinamis", id="dynamic")
             yield StadataDataTable(id="main-datatable")
             yield LoadingSpinner(id="loader")
+
+    @on(RadioSet.Changed)
+    async def on_table_type_changed(self, event: RadioSet.Changed) -> None:
+        """Dipanggil saat pengguna mengganti jenis tabel."""
+        self.table_type = event.pressed.id
+        if self.selected_domain:
+            domain_id, domain_name = self.selected_domain
+            await self._load_table_list(domain_id, domain_name)
 
     async def display_domains(self):
         """Mengambil dan menampilkan daftar domain dari BPS."""
@@ -71,6 +91,9 @@ class DataExplorer(Widget):
         loader.start()
 
         table.clear(columns=True)
+
+        self.query_one("#table-type-selector", RadioSet).disabled = True
+        self.query_one("#table-type-selector").styles.display = "none"
 
         try:
             self.post_message(DataExplorerMessage("update_prompt", {
@@ -92,6 +115,8 @@ class DataExplorer(Widget):
 
             self.current_view = "domain"
             self.selected_domain = None
+            self.table_type = "static" 
+            self.query_one(RadioSet).pressed_index = 0
         except Exception as e:
             self.post_message(DataExplorerMessage("update_prompt", {
                 "breadcrumbs": "[bold red]Error[/]",
@@ -106,8 +131,8 @@ class DataExplorer(Widget):
             table.disabled = False 
             self.is_loading = False 
 
-    async def display_tables_for(self, domain_id: str, domain_name: str):
-        """Mengambil dan menampilkan daftar tabel untuk domain terpilih."""
+    async def _load_table_list(self, domain_id: str, domain_name: str):
+        """Mengambil dan menampilkan daftar tabel statis ATAU dinamis."""
         if self.is_loading:
             return
 
@@ -115,7 +140,7 @@ class DataExplorer(Widget):
         table = self.query_one("#main-datatable", StadataDataTable)
         loader = self.query_one("#loader", LoadingSpinner)
 
-        table.disabled = True 
+        table.disabled = True
         table.display = False
         loader.display = True
         loader.start()
@@ -126,41 +151,55 @@ class DataExplorer(Widget):
             breadcrumbs = f"Beranda > [cyan]{domain_name}[/]"
             self.post_message(DataExplorerMessage("update_prompt", {
                 "breadcrumbs": breadcrumbs,
-                "footer": "Memuat tabel..."
+                "footer": f"Memuat daftar tabel {self.table_type}..."
             }))
 
-            df = await self._fetch_with_min_delay(
-                self.app.api_client.list_static_tables(domain_id=domain_id)
-            )
+            if self.table_type == "static":
+                df = await self._fetch_with_min_delay(
+                    self.app.api_client.list_static_tables(domain_id=domain_id)
+                )
+                table.add_columns("ID", "Nama Tabel", "Terakhir Update")
+                if not df.empty:
+                    for row in df.itertuples():
+                        table.add_row(str(row.table_id), str(row.title), str(row.updt_date))
+                else:
+                    table.add_row("", "Tidak ada tabel statis ditemukan", "")
+
+            else: # self.table_type == "dynamic"
+                df = await self._fetch_with_min_delay(
+                    self.app.api_client.list_dynamic_tables(domain_id=domain_id)
+                )
+                table.add_columns("ID", "Judul Variabel", "Subjek")
+                if not df.empty:
+                    for row in df.itertuples():
+                        table.add_row(str(row.var_id), str(row.title), str(row.sub_name))
+                        table.get_row_at(table.row_count - 1).metadata_source = getattr(row, "source_domain", None)
+                else:
+                    table.add_row("", "Tidak ada tabel dinamis ditemukan", "")
 
             self.post_message(DataExplorerMessage("update_prompt", {
                 "breadcrumbs": breadcrumbs,
-                "footer": "[Esc] Kembali  |  [Enter] Lihat Tabel"
+                "footer": "[Esc] Kembali  |  [Enter] Pilih Tabel"
             }))
-
-            table.add_columns("ID", "Nama Tabel", "Terakhir Update")
-            if not df.empty:
-                for row in df.itertuples():
-                    table.add_row(str(row.table_id), str(row.title), str(row.updt_date))
-            else:
-                table.add_row("", "Tidak ada tabel statis ditemukan", "")
 
             self.current_view = "table"
         except Exception as e:
-            self.post_message(DataExplorerMessage("update_prompt", {"text": f"[red]Error: {str(e)}[/red]"}))
-            self.current_view = "domain"
+            self.post_message(DataExplorerMessage("update_prompt", {
+                "breadcrumbs": f"[bold red]Error memuat tabel {self.table_type}[/]",
+                "footer": str(e)
+            }))
         finally:
             loader.stop()
             loader.display = False
             table.display = True
-            table.disabled = False 
+            table.disabled = False
             self.is_loading = False 
 
     @on(StadataDataTable.RowSelected)
     async def handle_row_selection(self, event: StadataDataTable.RowSelected):
         """Mendelegasikan event pemilihan baris."""
         if self._selection_lock.locked():
-            return 
+            return
 
         async with self._selection_lock:
             if self.is_loading:
@@ -174,12 +213,29 @@ class DataExplorer(Widget):
                     return
 
                 self.selected_domain = (domain_id, domain_name)
+
+                try:
+                    selector = self.query_one("#table-type-selector", RadioSet)
+                    selector.disabled = False
+                    selector.styles.display = "block"
+                except Exception:
+                    pass
+
                 self.post_message(DataExplorerMessage("update_prompt", {"text": f"Memuat tabel untuk: [bold cyan]{domain_name}[/]..."}))
-                await self.display_tables_for(domain_id, domain_name)
+                await self._load_table_list(domain_id, domain_name)
 
             elif self.current_view == "table":
                 row_data = event.control.get_row_at(event.cursor_row)
-                table_id, table_title = row_data[0], row_data[1]
 
-                if table_id and table_id != "":
+                if not row_data or not row_data[0]:
+                    return
+
+                if self.table_type == "static":
+                    table_id, table_title = row_data[0], row_data[1]
                     self.post_message(TableSelected(table_id, table_title))
+                else:
+                    var_id, title = row_data[0], row_data[1]
+                    metadata_source = getattr(event.control.get_row_at(event.cursor_row), "metadata_source", None)
+                    message = DynamicTableSelected(var_id, title)
+                    message.metadata_source = metadata_source
+                    self.post_message(message)

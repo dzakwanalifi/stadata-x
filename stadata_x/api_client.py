@@ -12,6 +12,8 @@ import json
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Callable, Any
+import requests
+from html import unescape
 
 class FileExistsError(Exception):
     """Exception kustom saat file yang akan didownload sudah ada."""
@@ -26,6 +28,27 @@ class NoInternetError(Exception): pass
 class BpsApiDataError(Exception):
     """Exception kustom saat API BPS mengembalikan data tak terduga."""
     pass
+
+def handle_api_errors(func: Callable) -> Callable:
+    """Decorator untuk menangani error umum dari API call."""
+    @wraps(func)
+    async def wrapper(self, *args, **kwargs):
+        if not self.is_ready:
+            raise ApiTokenError("Token API tidak diatur.")
+        try:
+            return await func(self, *args, **kwargs)
+        except ConnectionError:
+            raise NoInternetError("Tidak ada koneksi internet.")
+        except HTTPError as e:
+            if e.response.status_code == 401:
+                raise ApiTokenError("Token API tidak valid.")
+            elif e.response.status_code >= 500:
+                raise BpsServerError("Server BPS sedang mengalami masalah.")
+            else:
+                raise
+        except Timeout:
+            raise NoInternetError("Koneksi ke server BPS timeout.")
+    return wrapper
 
 class ApiClient:
     """Kelas untuk berinteraksi dengan WebAPI BPS melalui stadata."""
@@ -120,77 +143,215 @@ class ApiClient:
         except Timeout:
             raise NoInternetError("Koneksi ke server BPS timeout.")
 
+    @handle_api_errors
     async def list_static_tables(self, domain_id: str) -> DataFrame:
         """Mengambil daftar tabel statis untuk domain tertentu."""
-        if not self.is_ready:
-            raise ApiTokenError("Token API tidak diatur.")
+        return await self._api_call_with_retry(
+            self.client.list_statictable, domain=[domain_id]
+        )
 
-        try:
-            return await self._api_call_with_retry(
-                self.client.list_statictable, domain=[domain_id]
-            )
-        except ConnectionError:
-            raise NoInternetError("Tidak ada koneksi internet.")
-        except HTTPError as e:
-            if e.response.status_code == 401:
-                raise ApiTokenError("Token API tidak valid.")
-            elif e.response.status_code >= 500:
-                raise BpsServerError("Server BPS sedang mengalami masalah.")
-            else:
-                raise 
-        except Timeout:
-            raise NoInternetError("Koneksi ke server BPS timeout.")
-
+    @handle_api_errors
     async def view_static_table(self, domain_id: str, table_id: str) -> DataFrame:
         """Melihat isi tabel statis BPS dengan validasi output."""
-        if not self.is_ready:
+        result = await self._api_call_with_retry(
+            self.client.view_statictable, domain=domain_id, table_id=table_id
+        )
+
+        print(f"DEBUG: API result type: {type(result)}")
+        if hasattr(result, 'shape'):
+            print(f"DEBUG: DataFrame shape: {result.shape}")
+        elif isinstance(result, str):
+            print(f"DEBUG: String result (first 200 chars): {result[:200]}")
+        else:
+            print(f"DEBUG: Other result type: {str(result)[:200]}")
+
+        if not isinstance(result, pd.DataFrame):
+            error_message = f"API BPS mengembalikan data tak terduga (tipe: {type(result).__name__}): {str(result)[:500]}"
+            raise BpsApiDataError(error_message)
+
+        if result.empty:
+            raise BpsApiDataError("Tabel BPS kosong atau tidak tersedia")
+
+        return result
+
+    @handle_api_errors
+    async def list_dynamic_tables(self, domain_id: str) -> DataFrame:
+        """Mengambil daftar tabel dinamis untuk domain tertentu."""
+        return await self._api_call_with_retry(
+            self.client.list_dynamictable, domain=[domain_id]
+        )
+
+    @handle_api_errors
+    async def get_dynamic_table_metadata(self, domain_id: str, var_id: str) -> dict:
+        token = config.load_token()
+        if not token:
             raise ApiTokenError("Token API tidak diatur.")
 
-        try:
-            result = await self._api_call_with_retry(
-                self.client.view_statictable, domain=domain_id, table_id=table_id
+        base_url = "https://webapi.bps.go.id/v1/api/list"
+
+        async def fetch_for_domain(target_domain: str) -> dict:
+            params = {"domain": target_domain, "var": var_id, "key": token}
+
+            async def fetch(model: str):
+                response = await asyncio.to_thread(
+                    requests.get,
+                    base_url,
+                    params={**params, "model": model},
+                    timeout=30
+                )
+                response.raise_for_status()
+                return response.json()
+
+            vervar_json, turvar_json, th_json, turth_json = await asyncio.gather(
+                fetch("vervar"),
+                fetch("turvar"),
+                fetch("th"),
+                fetch("turth"),
             )
 
-            # Debug logging untuk memahami tipe data yang dikembalikan
-            print(f"DEBUG: API result type: {type(result)}")
-            if hasattr(result, 'shape'):
-                print(f"DEBUG: DataFrame shape: {result.shape}")
-            elif isinstance(result, str):
-                print(f"DEBUG: String result (first 200 chars): {result[:200]}")
-            else:
-                print(f"DEBUG: Other result type: {str(result)[:200]}")
+            def extract_list(data_json, mapping):
+                if data_json.get("data-availability") != "available":
+                    return []
+                data = data_json.get("data", [])
+                if isinstance(data, list) and len(data) == 2 and isinstance(data[1], list):
+                    items = []
+                    for item in data[1]:
+                        new_item = {}
+                        for src, dst in mapping.items():
+                            if src in item:
+                                new_item[dst] = item[src]
+                        if new_item:
+                            items.append(new_item)
+                    return items
+                return []
 
-            if not isinstance(result, pd.DataFrame):
-                error_message = f"API BPS mengembalikan data tak terduga (tipe: {type(result).__name__}): {str(result)[:500]}"
-                raise BpsApiDataError(error_message)
+            vertical_vars = extract_list(vervar_json, {
+                "item_ver_id": "id",
+                "vervar": "label",
+                "kode_ver_id": "code",
+                "group_ver_id": "group",
+                "name_group_ver_id": "group_name"
+            })
 
-            if result.empty:
-                raise BpsApiDataError("Tabel BPS kosong atau tidak tersedia")
+            horizontal_vars = extract_list(turvar_json, {
+                "turvar_id": "id",
+                "turvar": "label",
+                "group_turvar_id": "group",
+                "name_group_turvar": "group_name"
+            })
 
-            return result
-        except ConnectionError:
-            raise NoInternetError("Tidak ada koneksi internet.")
-        except HTTPError as e:
-            if e.response.status_code == 401:
-                raise ApiTokenError("Token API tidak valid.")
-            elif e.response.status_code >= 500:
-                raise BpsServerError("Server BPS sedang mengalami masalah.")
-            else:
-                raise
-        except Timeout:
-            raise NoInternetError("Koneksi ke server BPS timeout.")
-        except TypeError as e:
-            if "string indices must be integers" in str(e):
-                # Error ini terjadi ketika kode mencoba mengakses string seperti dictionary
-                error_message = f"Response dari API BPS tidak valid untuk tabel {table_id}. Kemungkinan tabel tidak tersedia atau format data berubah."
-                print(f"DEBUG: TypeError caught: {str(e)}")
-                raise BpsApiDataError(error_message)
-            else:
-                raise BpsApiError(f"Error tipe data: {str(e)}")
-        except KeyError as e:
-            # Error ketika mencoba mengakses key yang tidak ada
-            error_message = f"Format response dari API BPS tidak sesuai untuk tabel {table_id}: missing key {str(e)}"
-            raise BpsApiDataError(error_message)
+            years = extract_list(th_json, {
+                "th_id": "id",
+                "th": "label"
+            })
+
+            derived_years = extract_list(turth_json, {
+                "turth_id": "id",
+                "turth": "label",
+                "group_turth_id": "group",
+                "name_group_turth": "group_name"
+            })
+
+            for item in vertical_vars + horizontal_vars + years + derived_years:
+                if "label" in item and isinstance(item["label"], str):
+                    item["label"] = unescape(item["label"]).strip()
+
+            return {
+                "vertical_vars": vertical_vars,
+                "horizontal_vars": horizontal_vars,
+                "years": years,
+                "derived_years": derived_years,
+                "source_domain": target_domain,
+            }
+
+        metadata = await fetch_for_domain(domain_id)
+
+        if (
+            (not metadata["vertical_vars"] or not metadata["horizontal_vars"] or not metadata["years"])
+            and domain_id != "0000"
+        ):
+            fallback_metadata = await fetch_for_domain("0000")
+            if fallback_metadata["vertical_vars"] and fallback_metadata["horizontal_vars"] and fallback_metadata["years"]:
+                metadata = fallback_metadata
+                metadata["source_domain"] = "0000"
+
+        if not metadata["vertical_vars"] or not metadata["horizontal_vars"] or not metadata["years"]:
+            raise BpsApiDataError("Metadata tabel dinamis tidak tersedia untuk parameter tersebut.")
+
+        return metadata
+
+    @staticmethod
+    def _decode_datacontent_key(key: str) -> dict:
+        segments = {
+            "domain": key[0:4],
+            "year": key[4:6],
+            "vertical_group": key[6:8],
+            "vertical_item": key[8:13],
+            "horizontal": key[13:16],
+            "derived": key[16:19],
+        }
+        return segments
+
+    @handle_api_errors
+    async def get_dynamic_table_data(
+        self,
+        domain_id: str,
+        var_id: str,
+        vertical_var_id: str,
+        year: str,
+        horizontal_var_ids: list[str],
+        vertical_var_item_ids: list[str],
+        source_domain: str | None = None,
+    ) -> DataFrame:
+        token = config.load_token()
+        if not token:
+            raise ApiTokenError("Token API tidak diatur.")
+
+        effective_domain = source_domain or domain_id
+
+        params = {
+            "model": "data",
+            "domain": effective_domain,
+            "var": var_id,
+            "key": token,
+            "th": year,
+        }
+
+        if vertical_var_id:
+            params["vervar"] = vertical_var_id
+        if horizontal_var_ids:
+            params["turvar"] = ";".join(horizontal_var_ids)
+        if vertical_var_item_ids:
+            params["turth"] = ";".join(vertical_var_item_ids)
+
+        response = await asyncio.to_thread(
+            requests.get,
+            "https://webapi.bps.go.id/v1/api/list",
+            params=params,
+            timeout=30
+        )
+        response.raise_for_status()
+        result = response.json()
+
+        if result.get("data-availability") != "available":
+            raise BpsApiDataError("Data tabel dinamis tidak tersedia untuk parameter tersebut.")
+
+        datacontent = result.get("datacontent")
+        if not isinstance(datacontent, dict):
+            raise BpsApiDataError("Respons API tidak mengandung datacontent yang valid.")
+
+        records = []
+        for key, value in datacontent.items():
+            decoded = self._decode_datacontent_key(key)
+            decoded["value"] = value
+            decoded["raw_key"] = key
+            records.append(decoded)
+
+        df = pd.DataFrame(records)
+        if df.empty:
+            raise BpsApiDataError("Data tabel dinamis kosong.")
+
+        return df
 
     async def download_table(
         self,

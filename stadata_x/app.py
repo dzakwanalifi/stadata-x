@@ -6,6 +6,7 @@ from stadata_x.screens.welcome_screen import WelcomeScreen
 from stadata_x.screens.dashboard_screen import DashboardScreen
 from stadata_x.screens.settings_screen import SettingsScreen
 from stadata_x.screens.table_view_screen import TableViewScreen
+from stadata_x.screens.dynamic_table_builder_screen import DynamicTableBuilderScreen
 
 
 class StadataXApp(App):
@@ -16,6 +17,7 @@ class StadataXApp(App):
         "dashboard": DashboardScreen,
         "settings": SettingsScreen,
         "table_view": TableViewScreen,
+        "dynamic_builder": DynamicTableBuilderScreen, 
     }
     BINDINGS = [
         ("q", "quit", "Keluar"),

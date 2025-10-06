@@ -178,3 +178,38 @@ StadataDataTable > .datatable--header {
     background: $primary-darken-2;
     text-style: bold;
 }
+
+/* Dynamic Table Builder Styles */
+.hidden {
+    display: none;
+}
+
+.mt-1 {
+    margin-top: 1;
+}
+
+/* Styling tambahan untuk builder agar lebih rapi */
+#builder-container {
+    padding: 0 1;
+    border: round white;
+    margin-top: 1;
+}
+
+#preview-area {
+    margin-top: 1;
+    padding: 0 1;
+    border: round white;
+}
+
+.preview-title {
+    padding: 0 1;
+    width: 100%;
+    background: $primary;
+    color: $text;
+    text-align: center;
+}
+
+#generate-table-button {
+    width: 100%;
+    margin-top: 1;
+}

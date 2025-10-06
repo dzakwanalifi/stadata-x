@@ -7,9 +7,10 @@ from textual import on
 
 from stadata_x.widgets.header import StadataHeader
 from stadata_x.widgets.footer import StadataFooter
-from stadata_x.widgets.data_explorer import DataExplorer, DataExplorerMessage, TableSelected
-from stadata_x.widgets.data_table import StadataDataTable 
-from stadata_x.screens.table_view_screen import TableViewScreen 
+from stadata_x.widgets.data_explorer import DataExplorer, DataExplorerMessage, TableSelected, DynamicTableSelected
+from stadata_x.widgets.data_table import StadataDataTable
+from stadata_x.screens.table_view_screen import TableViewScreen
+from stadata_x.screens.dynamic_table_builder_screen import DynamicTableBuilderScreen 
 
 class DashboardScreen(Screen):
     """Layar utama yang sekarang hanya bertugas sebagai manajer layout."""
@@ -61,6 +62,9 @@ class DashboardScreen(Screen):
             if "footer" in event.data:
                 footer.title = event.data["footer"]
 
+            if "text" in event.data:
+                breadcrumbs_bar.update(event.data["text"])
+
     @on(TableSelected)
     def handle_table_selection_from_explorer(self, event: TableSelected):
         """Menangkap pesan dari DataExplorer dan membuka layar pratinjau."""
@@ -73,6 +77,29 @@ class DashboardScreen(Screen):
         self.app.push_screen(
             TableViewScreen(domain_id, table_id, table_title, domain_name)
         )
+
+    @on(DynamicTableSelected)
+    def handle_dynamic_table_selection_from_explorer(self, event: DynamicTableSelected):
+        explorer = self.query_one(DataExplorer)
+
+        var_id = event.var_id
+        title = event.title
+        metadata_source = getattr(event, "metadata_source", None)
+
+        if explorer.selected_domain:
+            domain_id, domain_name = explorer.selected_domain
+            source_domain = metadata_source or domain_id
+            self.app.push_screen(
+                DynamicTableBuilderScreen(
+                    domain_id=domain_id,
+                    var_id=var_id,
+                    title=title,
+                    domain_name=domain_name,
+                    metadata_source=source_domain
+                )
+            )
+        else:
+            self.app.notify("Domain tidak terpilih.", title="Error Navigasi", severity="error")
 
     async def action_go_back(self) -> None:
         """Aksi yang dipanggil saat tombol Escape ditekan."""
