@@ -85,6 +85,10 @@ PlotWidget {
     margin: 2 0;
 }
 
+.hidden {
+    display: none;
+}
+
 .breadcrumbs {
     background: $boost;
     color: $text;

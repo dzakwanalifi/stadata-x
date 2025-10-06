@@ -62,9 +62,10 @@ class DataExplorer(Widget):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="content-area"):
-            with RadioSet(id="table-type-selector", disabled=True):
+            # Temporarily hide dynamic table selector due to async generator bug
+            with RadioSet(id="table-type-selector", disabled=True, classes="hidden"):
                 yield RadioButton("Tabel Statis", value=True, id="static")
-                yield RadioButton("Tabel Dinamis", id="dynamic")
+                yield RadioButton("Tabel Dinamis", id="dynamic", disabled=True)
             yield StadataDataTable(id="main-datatable")
             yield LoadingSpinner(id="loader")
 
