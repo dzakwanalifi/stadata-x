@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Optional
 
 CONFIG_DIR = Path.home() / ".stadata-x"
 CONFIG_FILE = CONFIG_DIR / "config.json"
@@ -27,5 +28,5 @@ def save_token(token: str) -> None:
     config_data["api_token"] = token
     save_config(config_data)
 
-def load_token() -> str | None:
+def load_token() -> Optional[str]:
     return load_config().get("api_token")

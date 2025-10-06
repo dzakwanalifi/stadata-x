@@ -1,5 +1,6 @@
 # stadata_x/widgets/spinner.py
 
+from typing import Optional
 from textual.widgets import Static
 from textual.timer import Timer
 
@@ -19,7 +20,7 @@ class LoadingSpinner(Static):
         ]
 
         self.frame_index = 0
-        self.timer: Timer | None = None
+        self.timer: Optional[Timer] = None
 
     def on_mount(self) -> None:
         """Widget dimount - tidak langsung mulai animasi."""

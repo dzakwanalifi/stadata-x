@@ -11,7 +11,7 @@ import time
 import json
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 import requests
 from html import unescape
 
@@ -56,12 +56,12 @@ class ApiClient:
     CACHE_FILE = config.CONFIG_DIR / "domain_cache.json"
     CACHE_DURATION = timedelta(days=7)
 
-    def __init__(self, token: str | None = None):
+    def __init__(self, token: Optional[str] = None):
         """
         Inisialisasi klien.
 
         Args:
-            token (str | None): Jika disediakan, gunakan token ini.
+            token (Optional[str]): Jika disediakan, gunakan token ini.
                                 Jika tidak, coba muat dari file konfigurasi.
         """
         self.token = token or config.load_token()
@@ -301,7 +301,7 @@ class ApiClient:
         year: str,
         horizontal_var_ids: list[str],
         vertical_var_item_ids: list[str],
-        source_domain: str | None = None,
+        source_domain: Optional[str] = None,
     ) -> DataFrame:
         token = config.load_token()
         if not token:

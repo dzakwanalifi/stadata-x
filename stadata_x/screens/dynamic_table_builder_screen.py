@@ -1,5 +1,6 @@
 # stadata_x/screens/dynamic_table_builder_screen.py
 
+from typing import Optional
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import (
@@ -22,7 +23,7 @@ class DynamicTableBuilderScreen(Screen):
         Binding("d", "download_table", "Download Tabel", show=False),
     ]
 
-    def __init__(self, domain_id: str, var_id: str, title: str, domain_name: str, metadata_source: str | None = None):
+    def __init__(self, domain_id: str, var_id: str, title: str, domain_name: str, metadata_source: Optional[str] = None):
         super().__init__()
         self.domain_id = domain_id
         self.var_id = var_id
